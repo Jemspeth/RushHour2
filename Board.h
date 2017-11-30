@@ -17,6 +17,9 @@
 // Header Files ///////////////////////////////////////////////////
 //
 #include <iostream>
+#include <map>
+#include <queue>
+#include <string>
 using namespace std;
 
 
@@ -42,16 +45,23 @@ class board
 	bool didWeWin();	/**< This function checks that did we win by checking if veh[0] is at the edge*/
 	bool moveFwd(int car);  /**< This function moves the vehicle forward if there is empty space in front (right or down) of the vehicle.*/
 	bool moveBwd(int car);  /**< This function moves the vehicle backward if there is empty space behind (left or up) the vehicle.*/
-	void solve(int moves, int& cap, bool& win);	/**< This function makes recursive calls to itself and tries to solve the board in least moves.*/
+	void solve(int& level, int cap, bool& win);	/**< This function makes recursive calls to itself and tries to solve the board in least moves.*/
 	void setCars(int numVehicle);	/**< This function sets the cars data member for the numbers of cars on the board*/
 	void setVehicle(int sz, char ornt, int rw, int col, int vehNum);	/**< This function set up the veh array with details about each vehicle...*/
 	void setBoard();	/**< This function sets the board according to data in veh array.*/
-	void b2string( string &str );
+	
+		void createLevel(int level,bool&win);
+		void generateBoard(string str);
+		void generateString( string &str );
+		void getVehicle();	//this function can be removed
+		void getVhBoard();	//this function can be removed
   private:
   	//the required data members.
-  	vehicle veh[18];	/**< Stores the data of all the vehicles on the board.*/
+  	vehicle veh[10];	/**< Stores the data of all the vehicles on the board.*/
   	int cars;	/**< Stores the total number of vehicles in a given scenario.*/
   	char vhBoard[8][8];	/**< This is the rush hour problem board that needs to be solved.*/
+  	map <string,int> boardStrings; 
+  	queue <string> boardHash;
 };
 
 
