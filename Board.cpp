@@ -9,7 +9,7 @@
 //
 // Header Files ///////////////////////////////////////////////////
 //
-#include "Board.h"
+#include "board.h"
 
 
 /**
@@ -114,32 +114,103 @@ bool board::moveBwd(int j)
  * @exception none
  * @return void
 */
-void board::solve(int moves, int& cap, bool& win)
+void board::solve(int& level, int cap, bool& win)
 {
-	if( moves >= cap )
-		return;
+	string str;
 	if( didWeWin() )
 	{
-		if(moves<cap)
-			cap=moves;
 		win = true;
 		return;
 	}
-	for( int i = 0; i < cars; i++ )
+	generateString(str);
+	boardStrings.insert(pair<string,int>(str,level));
+	boardHash.push(str);
+	for( int i = 0; i < cap; i++ )
 	{
-		if(moveFwd(i))
+cout<<"SoLvE bOaRd ";
+char a;
+cin>>a;
+		createLevel(level,win);
+		if(win == true)
 		{
-			solve(moves + 1, cap, win);
-			moveBwd(i);
+			return;
 		}
-		if(moveBwd(i))
-		{
-			solve(moves + 1, cap, win);
-			moveFwd(i);
-		}
+		level++;
+		if( level >= cap )
+			return;
 	}
 }
 
+void board::createLevel(int level,bool&win)
+{
+	map <string,int> ::iterator it;
+	string currStr = boardHash.front();
+	string str;
+	//string ending = boardHash.back();
+	bool firstSet = false;
+	string first;
+	char a;
+	do
+	{
+cout<<" DO While ";		
+cin>>a;
+currStr = boardHash.front();
+generateBoard(currStr);
+		for (int i = 0; i < cars; ++i)
+		{
+			if(moveFwd(i))
+			{
+				generateString(str);
+				it = boardStrings.find(str);
+				if( it == boardStrings.end() )
+				{
+					if( didWeWin() )
+					{
+						win = true;
+						return;
+					}
+					boardStrings.insert(pair<string,int>(str,level));
+					boardHash.push(str);
+					if(!firstSet)
+						first = str;
+cout<<"MOVE FOREWARD ";
+cin>>a;
+cout<<endl;
+getVhBoard();	
+				}
+				moveBwd(i);
+			}
+			if(moveBwd(i))
+			{
+				it = boardStrings.find(str);
+				if( it == boardStrings.end() )
+				{
+					generateString(str);
+					if( didWeWin() )
+					{
+						win = true;
+						return;
+					}
+					boardStrings.insert(pair<string,int>(str,level));
+					boardHash.push(str);
+					if(!firstSet)
+						first = str;
+cout<<"MOVE BACKWARD ";
+cin>>a;
+cout<<endl;
+getVhBoard();	
+				}
+				moveFwd(i);
+			}
+		}
+		if(first != boardHash.front())
+		{
+			boardHash.pop();
+cout<< "POPPED"<<endl;
+}
+	}while(first != boardHash.front());
+	
+}
 
 /**
  * This function sets the cars data member of board class.
@@ -187,7 +258,7 @@ void board::setVehicle(int sz, char ornt, int rw, int col, int vehNum)
  * This function sets up the board.
  * This function sets the board according to the data in the veh array and it covers all the sides 
  * of the board with 'X' to mark the edges of the board and the empty spaces are filled with 'O'
- * the cars are denoted by letter and truck is denoted by letter.
+ * the cars are denoted by 'C' and truck is denoted by 'T'.
  * @param none
  * @pre none 
  * @post the board is set up according to the information stored in the veh array.
@@ -207,7 +278,7 @@ void board::setBoard()
 		}
 	}
 	for( j = 0; j < cars; j++ )
-	{	
+	{
 		char letter = j + 65;
 		if( veh[j].size == 3 && veh[j].orientation == 'H')
 		{
@@ -238,9 +309,54 @@ void board::setBoard()
 			}
 		}
 	}
+	vhBoard [7] [7] = 0;
 }
 
-void board::b2string( string &str )
+
+void board::generateString( string &str )
 {
-	str = vhBoard[0];
+	str = *vhBoard;
+	//str = vhBoard[0];
+	/*for( int i = 0; i < 8; ++i )
+		str += vhBoard[i];
+	str.erase( str.end() - 1 );*/
 }
+
+
+
+//for debugging.
+void board::getVehicle()
+{
+	int vehNum=0;
+	cout<<cars<<endl;
+	while(vehNum<cars)
+	{
+		cout<<veh[vehNum].size<<" "<<
+		veh[vehNum].orientation<<" "<<
+		veh[vehNum].row<< " "<<
+		veh[vehNum].column<<endl;
+		vehNum++;
+	}
+}
+
+void board::getVhBoard()
+{
+	int i = 0, j = 0;
+	for(i = 0; i < 8; i++)
+	{
+		for(j = 0; j < 8; j++)
+		{
+			cout<<vhBoard [ i ] [ j ]<< " ";
+		}
+		cout<<endl;
+	}
+}
+
+void board::generateBoard(string str)
+{
+	for(int i = 1; i < 7; i++)
+		for(int j = 1; j < 7; j++)
+			vhBoard[i][j]=str[i*8+j];
+}
+
+
