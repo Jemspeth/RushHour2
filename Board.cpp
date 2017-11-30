@@ -360,3 +360,9 @@ void board::generateBoard(string str)
 }
 
 
+void board::solveItTest()
+{
+
+}
+
+
