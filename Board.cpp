@@ -360,9 +360,94 @@ void board::generateBoard(string str)
 }
 
 
-void board::solveItTest()
+void board::solveItTest( int moves )
 {
+	if( didWeWin() )
+		return moves;
+	else
+	{
+		string str;
+		generateString( str );
+		map<string, int>::iterator it;
+		it = boardStrings.find(str);
+		if( it == boardStrings.end() ) //not in map
+		{
+			boardHash.enqueue( str );
+			boardStrings.insert( pair<string, int>(str, moves) );
+			for( int i = 0; i < carCount; ++i )
+			{
+				if( moveFwd( i ) )
+				{
+					nextMove();
+					solveItTest(moves++);	
+				}
+				if( moveBwd( i ) )
+				{
+					nextMove();
+					solveItTest(moves++);	
+				}
+			}
+		}
+	}
 
+	//attempted iterative
+	int moves = -1;
+	bool done = false;
+	string str;
+	generateString( str );
+	boardHash.enqueue( str );
+	boardStrings.insert( pair<string, int>(str, moves) );
+	while( !done )
+	{
+		for( int i = 0; i < carCount && !done; ++i )
+		{
+			if( moveFwd( i ) )
+			{
+				if( nextMove() )	//new element added to queue
+				{
+					str = boardHash.front();
+					done = didWeWin( str );
+					boardHash.dequeue();
+				}
+				moveBwd( i );	//go back to original
+			}
+			if( moveBwd( i ) && !done )
+			{
+				if( nextMove() )
+				{
+					str = boardHash.front();
+					done = didWeWin( str );
+					boardHash.dequeue();					
+				}
+				moveFwd( i );	//go back to original
+			}
+		}
+		
+	}
+}	
+
+
+void board::nextMove()
+{
+	string str;
+	generateString( str );
+	map<string, int>::iterator it;
+	it = boardStrings.find(str);
+	if( it == boardStrings.end() ) //not in map
+	{
+		boardHash.enqueue( str );
+		boardStrings.insert( pair<string, int>(str, moves) );
+	}
 }
+
+
+
+
+
+
+	
+	
+	
+	
 
 
