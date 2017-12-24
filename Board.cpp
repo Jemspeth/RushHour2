@@ -1,15 +1,15 @@
-/** @file board.cpp
-@author Arush Prashar
-@version Revision 1.1
+/** @file Board.cpp
+@authors Arush Prashar and Jeremy Speth
+@version Revision 1.4
 @brief This file provides supporting functions for the rushhour program. 
-@date Tuesday, October 03, 2017
+@date Tuesday, December 5, 2017
 */
 
 
 //
 // Header Files ///////////////////////////////////////////////////
 //
-#include "board.h"
+#include "Board.h"
 
 
 /**
@@ -48,7 +48,7 @@ bool board::moveFwd(int j)
 {
 	if(veh[j].orientation == 'H' && vhBoard [ veh[j].row ] [ veh[j].column + veh[j].size ] == 'O')
 	{
-		vhBoard [ veh[j].row ] [ veh[j].column + veh[j].size ] = vhBoard [ veh[j].row ] [ veh[j].column ];
+		vhBoard [ veh[j].row ] [ veh[j].column + veh[j].size ] = j + 97;//vhBoard [ veh[j].row ] [ veh[j].column ];
 		vhBoard [ veh[j].row ] [ veh[j].column ] = 'O';
 		++veh[j].column;
 		return true;
@@ -56,7 +56,7 @@ bool board::moveFwd(int j)
 	else{
 		if( veh[j].orientation == 'V' && vhBoard [ veh[j].row + veh[j].size ] [ veh[j].column ] == 'O')
 		{
-			vhBoard [ veh[j].row + veh[j].size ] [ veh[j].column ] = vhBoard [ veh[j].row ] [ veh[j].column ];
+			vhBoard [ veh[j].row + veh[j].size ] [ veh[j].column ] = j + 97;//vhBoard [ veh[j].row ] [ veh[j].column ];
 			vhBoard [ veh[j].row ] [ veh[j].column ]= 'O';
 			++veh[j].row;
 			return true;
@@ -81,7 +81,7 @@ bool board::moveBwd(int j)
 	if(veh[j].orientation == 'H' && vhBoard [ veh[j].row ] [ veh[j].column - 1 ] == 'O')
 	{
 		vhBoard [ veh[j].row ] [ veh[j].column + veh[j].size - 1 ] = 'O';
-		vhBoard [ veh[j].row ] [ veh[j].column - 1 ] = vhBoard [ veh[j].row ] [ veh[j].column ];
+		vhBoard [ veh[j].row ] [ veh[j].column - 1 ] = j + 97;//vhBoard [ veh[j].row ] [ veh[j].column ];
 		--veh[j].column;
 		return true;
 	}
@@ -89,7 +89,7 @@ bool board::moveBwd(int j)
 		if( veh[j].orientation == 'V' && vhBoard [ veh[j].row - 1 ] [ veh[j].column ] == 'O')
 		{
 			vhBoard [ veh[j].row + veh[j].size - 1 ] [ veh[j].column ] = 'O';
-			vhBoard [ veh[j].row + - 1 ] [ veh[j].column ]= vhBoard [ veh[j].row ] [ veh[j].column ];
+			vhBoard [ veh[j].row + - 1 ] [ veh[j].column ] = j + 97;//vhBoard [ veh[j].row ] [ veh[j].column ];
 			--veh[j].row;
 			return true;
 		}
@@ -100,117 +100,92 @@ bool board::moveBwd(int j)
 
 /**
  * This function creates a  recursive loop to solve the rush hour problem.
- * This function takes help of multiple other function to solve the rush hour problem
- * it calls the did we win funciton to check if the current board setup is a wining
- * board if not it calls the movefwd and movebwd functions to move the vehicle and if they
- * can be moved then it calls itself to solve the new board and when the base case is reached
- * starts backtracking to find the new solution.
- * @param moves passed by value it tells how many moves have we used to reach the current board setup.
- * @param cap passed in by reference it tells the maximum number of moves we can use to win
- * it also tells the best number of moves in which we can win the game.
+ * This function takes help of createLevel function to solve the rush hour problem.
+ * @param level passed by reference it tells how many moves have we used to reach the current board setup.
+ * @param win passed in by reference it tells if we won or not.
  * @param win passed in by reference it is set as true if we win.
  * @pre none 
  * @post the board has been solved (if there is a solution).
  * @exception none
  * @return void
 */
-void board::solve(int& level, int cap, bool& win)
+void board::solve(int& level, bool& win)
 {
 	string str;
-	if( didWeWin() )
+	if( didWeWin())
 	{
 		win = true;
 		return;
 	}
 	generateString(str);
-	boardStrings.insert(pair<string,int>(str,level));
 	boardHash.push(str);
-	for( int i = 0; i < cap; i++ )
+	level++;
+	for(; !boardHash.empty(); level++)
 	{
-cout<<"SoLvE bOaRd ";
-char a;
-cin>>a;
-		createLevel(level,win);
+		createLevel(win);
 		if(win == true)
-		{
-			return;
-		}
-		level++;
-		if( level >= cap )
 			return;
 	}
+	win = false;
 }
 
-void board::createLevel(int level,bool&win)
+
+/**
+ * This function creates a recursive loop to create all boards that can be reached in given number of moves.
+ * This function uses all the possible boards in the previous level and creates the boards that can be produced 
+ * in just one move, if the function also checks if the board was ever created before if it was it is not stored
+ * in the queue and during the creation of the new move if the winning board is created the function sets win to
+ * true and returns.
+ * @param win passed in by reference it is set as true if we win.
+ * @pre none 
+ * @post all the possible moves for the next level are pushed on the queue and the old values are discarded.
+ * @exception none
+ * @return void
+*/
+void board::createLevel(bool&win)
 {
-	map <string,int> ::iterator it;
-	string currStr = boardHash.front();
-	string str;
-	//string ending = boardHash.back();
-	bool firstSet = false;
-	string first;
-	char a;
-	do
+	string currStr,str;
+	map <string, int> :: iterator it;
+	queue <string> temp;
+	while(!boardHash.empty())
 	{
-cout<<" DO While ";		
-cin>>a;
-currStr = boardHash.front();
-generateBoard(currStr);
-		for (int i = 0; i < cars; ++i)
+		currStr = boardHash.front();
+		generateBoard(currStr);
+		for(int i = 0; i < cars; i++)
 		{
 			if(moveFwd(i))
 			{
+				if(didWeWin() && i == 0)
+				{
+					win = true;
+					return;
+				}
 				generateString(str);
 				it = boardStrings.find(str);
 				if( it == boardStrings.end() )
 				{
-					if( didWeWin() )
-					{
-						win = true;
-						return;
-					}
-					boardStrings.insert(pair<string,int>(str,level));
-					boardHash.push(str);
-					if(!firstSet)
-						first = str;
-cout<<"MOVE FOREWARD ";
-cin>>a;
-cout<<endl;
-getVhBoard();	
+					temp.push(str);
+					boardStrings.insert(pair <string, int> (str, 1));
 				}
 				moveBwd(i);
 			}
 			if(moveBwd(i))
 			{
+				generateString(str);
 				it = boardStrings.find(str);
 				if( it == boardStrings.end() )
 				{
-					generateString(str);
-					if( didWeWin() )
-					{
-						win = true;
-						return;
-					}
-					boardStrings.insert(pair<string,int>(str,level));
-					boardHash.push(str);
-					if(!firstSet)
-						first = str;
-cout<<"MOVE BACKWARD ";
-cin>>a;
-cout<<endl;
-getVhBoard();	
+					temp.push(str);
+					boardStrings.insert(pair <string, int> (str, 1));
 				}
 				moveFwd(i);
 			}
 		}
-		if(first != boardHash.front())
-		{
-			boardHash.pop();
-cout<< "POPPED"<<endl;
+		boardHash.pop();	
+	}
+	boardHash = temp;
 }
-	}while(first != boardHash.front());
-	
-}
+
 
 /**
  * This function sets the cars data member of board class.
@@ -253,7 +228,6 @@ void board::setVehicle(int sz, char ornt, int rw, int col, int vehNum)
 }
 
 
-
 /**
  * This function sets up the board.
  * This function sets the board according to the data in the veh array and it covers all the sides 
@@ -279,175 +253,94 @@ void board::setBoard()
 	}
 	for( j = 0; j < cars; j++ )
 	{
-		char letter = j + 65;
+		char letter = j + 97;
 		if( veh[j].size == 3 && veh[j].orientation == 'H')
 		{
 			vhBoard [ veh[j].row ] [ veh[j].column ] = letter;
 			vhBoard [ veh[j].row ] [ veh[j].column + 1 ] = letter;
 			vhBoard [ veh[j].row ] [ veh[j].column + 2 ] = letter;
 		}
-		else{
-			if( veh[j].size == 3 && veh[j].orientation == 'V')
-			{
-				vhBoard [ veh[j].row ] [ veh[j].column ] = letter;
-				vhBoard [ veh[j].row + 1 ] [ veh[j].column ] = letter;
-				vhBoard [ veh[j].row + 2 ] [ veh[j].column ] = letter;
-			}
-			else{
-				if( veh[j].size == 2 && veh[j].orientation == 'H')
-				{
-					vhBoard [ veh[j].row ] [ veh[j].column ] = letter;
-					vhBoard [ veh[j].row ] [ veh[j].column + 1 ] = letter;
-				}
-				else{
-					if( veh[j].size == 2 && veh[j].orientation == 'V')
-					{
-						vhBoard [ veh[j].row ] [ veh[j].column ] = letter;
-						vhBoard [ veh[j].row + 1 ] [ veh[j].column ] = letter;
-					}
-				}
-			}
+		else if( veh[j].size == 3 && veh[j].orientation == 'V')
+		{
+			vhBoard [ veh[j].row ] [ veh[j].column ] = letter;
+			vhBoard [ veh[j].row + 1 ] [ veh[j].column ] = letter;
+			vhBoard [ veh[j].row + 2 ] [ veh[j].column ] = letter;
+		}
+		else if( veh[j].size == 2 && veh[j].orientation == 'H')
+		{
+			vhBoard [ veh[j].row ] [ veh[j].column ] = letter;
+			vhBoard [ veh[j].row ] [ veh[j].column + 1 ] = letter;
+		}
+		else if( veh[j].size == 2 && veh[j].orientation == 'V')
+		{
+			vhBoard [ veh[j].row ] [ veh[j].column ] = letter;
+			vhBoard [ veh[j].row + 1 ] [ veh[j].column ] = letter;
 		}
 	}
-	vhBoard [7] [7] = 0;
 }
 
 
+/**
+ * This function generates the string from the current board.
+ * This function combines all the characters in the vehBoard array and forms a string
+ * which is unique for every board state.
+ * @param str a string passed in by reference to be set equal to current board state
+ * @pre none 
+ * @post the string now repersents the current board.
+ * @exception none
+ * @return void
+*/
 void board::generateString( string &str )
 {
 	str = *vhBoard;
-	//str = vhBoard[0];
-	/*for( int i = 0; i < 8; ++i )
-		str += vhBoard[i];
-	str.erase( str.end() - 1 );*/
+	str + '\0';
 }
 
 
-
-//for debugging.
-void board::getVehicle()
+/**
+ * This function generates the board using the string parameter passed to it.
+ * This function traverses the whole string and pulls characters form it to regenerate 
+ * the board, it also updates the location of the cars based on the string.
+ * @param str a string passed in by reference to be used to reproduce the board
+ * @pre none 
+ * @post the vhBoard and all the car locations are updated according to the string str.
+ * @exception none
+ * @return void
+*/
+void board::generateBoard( const string &str )
 {
-	int vehNum=0;
-	cout<<cars<<endl;
-	while(vehNum<cars)
-	{
-		cout<<veh[vehNum].size<<" "<<
-		veh[vehNum].orientation<<" "<<
-		veh[vehNum].row<< " "<<
-		veh[vehNum].column<<endl;
-		vehNum++;
-	}
-}
-
-void board::getVhBoard()
-{
-	int i = 0, j = 0;
-	for(i = 0; i < 8; i++)
-	{
-		for(j = 0; j < 8; j++)
+	bool* carSet = new bool(cars);
+	int i = 0, j = 1;
+	for(; i < cars; i++)
+		carSet[i] = false;
+	for(i = 1; i < 7; i++)
+		for(j = 1; j < 7; j++)
 		{
-			cout<<vhBoard [ i ] [ j ]<< " ";
-		}
-		cout<<endl;
-	}
-}
-
-void board::generateBoard(string str)
-{
-	for(int i = 1; i < 7; i++)
-		for(int j = 1; j < 7; j++)
 			vhBoard[i][j]=str[i*8+j];
+			if( str[i*8+j] != 'O' && !carSet[str[i*8+j] - 97])
+			{
+				veh[str[i*8+j] - 97].row = i ;
+				veh[str[i*8+j] - 97].column = j ;
+				carSet[str[i*8+j] - 97] = true;
+			}
+		}
+	delete [] carSet;
 }
 
 
-void board::solveItTest( int moves )
+/**
+ * This function resets the some of the data in the board class.
+ * This function empties the boardHash queue and boardStrings map so that they can
+ * be used for next scenarios.
+ * @param none
+ * @pre none 
+ * @post boardHash and boardStrings are now empty.
+ * @exception none
+ * @return void
+*/
+void board::resetBoard()
 {
-	if( didWeWin() )
-		return moves;
-	else
-	{
-		string str;
-		generateString( str );
-		map<string, int>::iterator it;
-		it = boardStrings.find(str);
-		if( it == boardStrings.end() ) //not in map
-		{
-			boardHash.enqueue( str );
-			boardStrings.insert( pair<string, int>(str, moves) );
-			for( int i = 0; i < carCount; ++i )
-			{
-				if( moveFwd( i ) )
-				{
-					nextMove();
-					solveItTest(moves++);	
-				}
-				if( moveBwd( i ) )
-				{
-					nextMove();
-					solveItTest(moves++);	
-				}
-			}
-		}
-	}
-
-	//attempted iterative
-	int moves = -1;
-	bool done = false;
-	string str;
-	generateString( str );
-	boardHash.enqueue( str );
-	boardStrings.insert( pair<string, int>(str, moves) );
-	while( !done )
-	{
-		for( int i = 0; i < carCount && !done; ++i )
-		{
-			if( moveFwd( i ) )
-			{
-				if( nextMove() )	//new element added to queue
-				{
-					str = boardHash.front();
-					done = didWeWin( str );
-					boardHash.dequeue();
-				}
-				moveBwd( i );	//go back to original
-			}
-			if( moveBwd( i ) && !done )
-			{
-				if( nextMove() )
-				{
-					str = boardHash.front();
-					done = didWeWin( str );
-					boardHash.dequeue();					
-				}
-				moveFwd( i );	//go back to original
-			}
-		}
-		
-	}
-}	
-
-
-void board::nextMove()
-{
-	string str;
-	generateString( str );
-	map<string, int>::iterator it;
-	it = boardStrings.find(str);
-	if( it == boardStrings.end() ) //not in map
-	{
-		boardHash.enqueue( str );
-		boardStrings.insert( pair<string, int>(str, moves) );
-	}
+	queue <string> empty;
+	swap( boardHash, empty );
+	boardStrings.clear();	
 }
-
-
-
-
-
-
-	
-	
-	
-	
-
-
