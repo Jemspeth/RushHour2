@@ -1,6 +1,8 @@
 # RushHour2
-Project 11/n
+Project 11
+
 CS 302
+
 Created by Jeremy Speth & Arush Prashar
 
 This project solves the game of rush hour and outputs the minimum number of moves given input in the form of:
