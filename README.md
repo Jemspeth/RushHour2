@@ -1,5 +1,5 @@
 # RushHour2
-Project 11
+Project 11/n
 CS 302
 Created by Jeremy Speth & Arush Prashar
 
